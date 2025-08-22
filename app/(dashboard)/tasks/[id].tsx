@@ -1,6 +1,11 @@
-import { View, Text, TextInput, Touchable, TouchableOpacity } from 'react-native'
-import React from 'react'
-import { useLocalSearchParams } from 'expo-router'
+import { View, Text, TextInput, Touchable, TouchableOpacity, Alert } from 'react-native'
+import React, { use } from 'react'
+import { router, useLocalSearchParams } from 'expo-router'
+import { createTask } from '@/services/taskService'
+import { useEffect } from 'react'
+import { getTaskById } from '@/services/taskService'
+import { useRouter } from 'expo-router'
+
 
 const TaskFormScreen = () => {
 
@@ -10,6 +15,36 @@ const TaskFormScreen = () => {
     const isNew = !id || id === "new" //null or id is new -> save
     const [title, setTitle] = React.useState("")
     const [description, setDescription] = React.useState("")
+
+
+    const router = useRouter()
+
+    useEffect(() => {
+      const load = async () => {
+      if(! isNew && id){
+        const task = await getTaskById(id)
+        if(task){
+            setTitle(task.title)
+            setDescription(task.description)
+        }
+
+      }
+
+    const handleSubmit = async () => {
+        if(!title.trim){
+            Alert.alert("Validation", "Title is required")
+            return
+        }
+        try {
+            if(isNew){
+                await createTask({title, description})
+            }
+            router.back()
+        } catch (error) {
+            console.error(error)
+            Alert.alert("Error", "Failed to save task")
+        }
+    }
   return (
     <View>
       <Text>{isNew ? "New Task" : "Edit Task"}</Text>
